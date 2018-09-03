@@ -15,7 +15,7 @@ source("functions.r")
 # - open source
 # - works on all main platforms (Windows, macOS, Linux)
 # - under continuous development
-# - masses of addons ('packages') available, ~4-8 new ones every day (currently more than 10,000 on CRAN)
+# - masses of addons ('packages') available, ~4-8 new ones every day (currently more than 13,000 on CRAN)
 
 
 # ************************************************

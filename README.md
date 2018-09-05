@@ -1,13 +1,31 @@
-# Materials for course "Statistics II"
+# GRAD-C6 Statistics II: Time Series, Panel Data and Limited Dependent Variables (with R)
 
-**Repository**
+### Overview
+
+**Term:** Fall 2018
+
+**Time:** Thursdays, 9-12
+
+**Location:** Hertie School of Governance, Berlin, Computer Lab
+
+**Instructor:** Simon Munzert ([website](https://simonmunzert.github.io), [Twitter](https://twitter.com/simonsaysnothin))
+
+
+**Thanks to:** [DataCamp](https://www.datacamp.com/) for providing free access to its courses for our students.
+
+### Course contents
+
+This course introduces students to an array of commonly used statistical techniques with a strong emphasis on actual application. All classes take place in the computer lab and divide time between theory and application. Students are assigned a problem set at the end of each class covering that day’s materials and the beginning of the following class is used to review the answers. As this is an applied class, most of these assignments involve the proper analysis of practice datasets using R. This class design is intended to provide students with both a theoretical and concrete understanding of statistical techniques. The course begins with a review of OLS regression and covers elementary time‐series and panel data, before introducing students to maximum likelihood estimation and some categorical data designs.
+
+
+### Repository
 
 This repository provides materials for the course "Statistics II: Time Series, Panel Data and Limited Dependent Variables (with R)". You'll find code and data used in the course:
 
 - The `code` folder features R scripts used in class as well as assignment scripts and solutions (provided with some delay): 
 - The `data` folder features various datasets used in class.
 
-**FAQ**
+### FAQ
 
 **1. I'm a Stata, not an R guy, but want to learn R. Where to start?**
 
@@ -33,14 +51,4 @@ This repository provides materials for the course "Statistics II: Time Series, P
 *Note:* Be sure to check out the files `01-r-primer-assignment.Rmd`, `01-r-primer-solutions.Rmd`, and `01-r-primer-solutions.html` as an example. 
 
 
-To be continued.
-
-
-**Course contents**
-
-This course introduces students to an array of commonly used statistical techniques with a strong emphasis on actual application. All classes take place in the computer lab and divide time between theory and application. Students are assigned a problem set at the end of each class covering that day’s materials and the beginning of the following class is used to review the answers. As this is an applied class, most of these assignments involve the proper analysis of practice datasets using R. This class design is intended to provide students with both a theoretical and concrete understanding of statistical techniques. The course begins with a review of OLS regression and covers elementary time‐series and panel data, before introducing students to maximum likelihood estimation and some categorical data designs.
-
-**Instructor** 
-
-Simon Munzert ([website](https://simonmunzert.github.io), [Twitter](https://twitter.com/simonsaysnothin))
 

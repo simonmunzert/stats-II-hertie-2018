@@ -18,7 +18,6 @@ data("wage1")
 qplot(educ, wage, data = wage1)
 plot(wage1$educ, wage1$wage)
 cor(wage1$wage, wage1$educ)
-with(wage1, cor(educ, wage))
 
 # run linear model
 wage_model <- lm(wage ~ educ, data = wage1)
@@ -30,7 +29,7 @@ stargazer(wage_model, single.row = TRUE, header = FALSE, style = "apsr", type = 
 browseURL("../output/wage_model_ols.html")
 
 # manual computation
-covariance_xy <- with(wage1, cov(wage, educ))
+covariance_xy <- cov(wage1$wage, wage1$educ)
 variance_x <- var(wage1$educ)
 covariance_xy / variance_x # beta_1
 mean(wage1$wage) - (covariance_xy / variance_x)*mean(wage1$educ) # beta_0
@@ -90,7 +89,7 @@ stargazer(wage_model_1, wage_model_2, wage_model_3, wage_model_4, header = FALSE
 browseURL("../output/wage_model_multiple.html")
 stargazer(wage_model_1, wage_model_2, wage_model_3, wage_model_4, header = FALSE, title = "Regressing wage on...", omit.table.layout = "dln", style = "apsr", font.size = "scriptsize", df = FALSE, report = "vcs", single.row = FALSE, no.space = TRUE, type = "latex", out = "../output/wage_model_multiple.tex")
 
-cor(select(wage1, wage, educ, female, nonwhite, profocc)) 
+cor(dplyr::select(wage1, wage, educ, female, nonwhite, profocc)) 
 
 
 

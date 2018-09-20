@@ -1,6 +1,6 @@
 # ************************************************
 ### simon munzert
-### ols and multiple regression
+### interaction models
 # ************************************************
 
 source("packages.r")
@@ -45,7 +45,7 @@ wage1$educ_cat <- car::recode(wage1$educ, "0:9='low' ;
 
 # run model
 summary(wage_model <- lm(wage ~ educ_cat*female, data = wage1))
-summary(wage_model <- lm(wage ~ educ_cat, data = wage1))
+
 
 
 # ************************************************
@@ -54,19 +54,13 @@ summary(wage_model <- lm(wage ~ educ_cat, data = wage1))
 # simulation setup
 set.seed(123)
 N <- 500
-x <- runif(N, 0, 1) * 3
-
-z <- runif(N, 0, 1)
-z <- ifelse(z >= .5, 1, 0)
-z[z >= .5] <- 1
-z[z  < .5] <- 0
-
+x <- runif(N, 0, 3)
 z <- rbinom(N, 1, .5)
+e <- rnorm(N, 0, .5)
 b0 <- 2
 b1 <- 0
 b2 <- 2
 b3 <- 2
-e <- rnorm(N, 0, sqrt(.5))
 y <- b0 + b1*x + b2*z + b3*x*z + e
 dat <- as.data.frame(y = y, x = x, z = z)
 # plot points
@@ -92,14 +86,14 @@ abline(coef = c(coef(model_red)[1], coef(model_red)[2] + coef(model_red)[3]), lw
 # continuous * continuous setup
 summary(wage_model <- lm(wage ~ exper*tenure, data = wage1))
 
-# tenure as mediator
+# tenure as moderator
 interplot(m = wage_model, var1 = "exper", var2 = "tenure", hist  = TRUE) +
   xlab('Tenure') +
   ylab('Estimated coefficient for experience') +
   ggtitle('Estimated coefficient of experience\non wage by tenure') +
   theme(plot.title = element_text(face='bold'))
 
-# experience as mediator
+# experience as moderator
 interplot(m = wage_model, var1 = "tenure", var2 = "exper", hist  = TRUE) +
   xlab('Experience') +
   ylab('Estimated coefficient for tenure') +
@@ -110,14 +104,14 @@ interplot(m = wage_model, var1 = "tenure", var2 = "exper", hist  = TRUE) +
 wage1$woman <- as.factor(wage1$female)
 summary(wage_model <- lm(wage ~ exper*woman, data = wage1))
 
-# tenure as mediator
+# tenure as moderator
 interplot(m = wage_model, var1 = "exper", var2 = "woman") +
   xlab('Woman') +
   ylab('Estimated coefficient for experience') +
   ggtitle('Estimated coefficient of experience\non wage by gender') +
   theme(plot.title = element_text(face='bold'))
 
-# experience as mediator
+# experience as moderator
 interplot(m = wage_model, var1 = "woman", var2 = "exper", hist  = TRUE) +
   xlab('Woman') +
   ylab('Estimated Coefficient for gender') +

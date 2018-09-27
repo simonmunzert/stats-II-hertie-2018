@@ -24,6 +24,9 @@ wage_model <- lm(wage ~ educ, data = wage1)
 summary(wage_model)
 coef(wage_model)
 
+wage1$exper2 <- wage1$exper^2
+lm(wage ~ educ +  exper + I(exper^2), data = wage1)
+
 # export model
 stargazer(wage_model, single.row = TRUE, header = FALSE, style = "apsr", type = "html", out = "../output/wage_model_ols.html")
 browseURL("../output/wage_model_ols.html")

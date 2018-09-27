@@ -21,7 +21,6 @@ dates_char <- c("2017-09-01", "2017-08-31", "2017-08-30")
 #dates_char <- c("20170901", "20170831", "20170830")
 #dates_char <- c("2017/09/01", "2017/08/31", "2017/08/30")
 class(dates_char)
-plot(dates_char)
 dates <- ymd(dates_char) # ymd() function to deal with year-month-day input
 dates
 plot(dates)
@@ -55,7 +54,7 @@ dat <- fertil3
 plot(dat$gfr)
 
 # create xts time series object
-dat_ts <- ts(dat, frequency = 1, start = 1913) # creat time-series object: provide time of the first observation and frequency 
+dat_ts <- ts(dat, frequency = 1, start = 1913) # create time-series object: provide time of the first observation and frequency 
 dat_xts <- as.xts(dat_ts)
 
 # dat_xts <- xts(dat, yearmon(dat$year)) # alternative assignment of time scheme with yearmon() function from the zoo package
@@ -63,9 +62,9 @@ plot(dat_xts$gfr)
 
 # create lag variables
 dat$gfr
-lag(dat$gfr, 1)
-lag(dat$gfr, 2)
-lead(dat$gfr, 1)
+dplyr::lag(dat$gfr, 1)
+dplyr::lag(dat$gfr, 2)
+dplyr::lead(dat$gfr, 1)
 
 
 
@@ -80,11 +79,24 @@ plot(nyse$price, type = "l")
 plot(nyse$return, type = "l")
 
 # do past returns help explain future returns?
-summary(lm(return ~ lag(return), data = nyse))
+summary(lm(return ~ dplyr::lag(return), data = nyse))
+
+# assess autocorrelation
+acf(nyse$return, na.action = na.pass)
+acf(nyse$price, na.action = na.pass, lag.max = 20)
+
+# assess partial autocorrelation
+pacf(nyse$return, na.action = na.pass)
+pacf(nyse$price, na.action = na.pass)
+
+# assess autocorrelation in residuals using the Durbin-Watson test for autocorrelation
+model <- lm(price ~ lag(price), data = nyse)
+summary(model)
+dwtest(model) # be careful: in LDV models the DW test statistic tends to underestimate autocorrelation
 
 # Augmented Dickey-Fuller test
-plot(nyse$t, nyse$return, type = "l")
 adf.test(nyse$return[-1])
+plot(nyse$t, nyse$return, type = "l")
 
 # How does the Dickey-Fuller test work?
   # tests the predictive power of an autoregressive process on the integrated time series
@@ -94,52 +106,6 @@ x <- rnorm(1000)  # no unit-root = stationary
 adf.test(x)
 y <- diffinv(x)   # contains a unit-root = non-stationary
 adf.test(y)
-
-# assess autocorrelation
-acf(nyse$return, na.action = na.pass)
-acf(nyse$price, na.action = na.pass, lag.max = 200)
-
-# assess autocorrelation in disturbances using the Durbin-Watson test for autocorrelation
-model <- lm(price ~ lag(price), data = nyse)
-summary(model)
-dwtest(model) # be careful; in LDV models, the DW test statistic uses to underestimate autocorrelation
-
-
-
-# ************************************************
-# Finite distributed lag (FDL) models ------------
-
-# scatterplot
-plot(dat$pe, dat$gfr)
-
-# parallel time series
-par(mfrow = c(2, 1))
-plot(dat_xts$gfr)
-plot(dat_xts$pe)
-
-# OLS
-model_out <- lm(gfr ~ pe, data = dat) # static model; only impact propensity assessed
-summary(model_out)
-model_out <- lm(gfr ~ pe + lag(pe, 1) + lag(pe, 2), data = dat) # assess long-run propensity with two lags
-summary(model_out)
-
-
-
-# ************************************************
-# Lag dependent variable (LDV) models ------------
-
-# check for autocorrelation
-acf(dat$gfr, na.action = na.pass)
-cor(dat$gfr, lag(dat$gfr), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 2), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 3), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 4), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 10), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 11), use = "pairwise.complete")
-cor(dat$gfr, lag(dat$gfr, 12), use = "pairwise.complete")
-
-# build simple LDV model
-summary(lm(gfr ~ lag(gfr, 1) + lag(gfr, 2), data = dat))
 
 
 
@@ -160,19 +126,39 @@ unemp_stl_df <- unemp_stl$time.series
 
 
 
+
 # ************************************************
-# Modeling linear trends; de-trending ------------
+# Finite distributed lag (FDL) models ------------
 
+# scatterplot
+plot(dat$pe, dat$gfr)
 
-model_out <- lm(gfr ~ pe + ww2 + pill + t + I(t^2), data = dat) # static model
+# parallel time series
+par(mfrow = c(2, 1))
+plot(dat_xts$gfr)
+plot(dat_xts$pe)
+
+# OLS
+model_out <- lm(gfr ~ pe, data = dat) # static model; only impact propensity assessed
+summary(model_out)
+model_out <- lm(gfr ~ pe + dplyr::lag(pe, 1) + dplyr::lag(pe, 2), data = dat) # assess long-run propensity with two lags
 summary(model_out)
 
-# add linear trend!
-# fertility increasing or decreasing in sample period?
-# add quadratic trend!
-# replicate results via de-trending
-# test for lagged effect of personal exemption
 
+
+# ************************************************
+# Lag dependent variable (LDV) models ------------
+
+# check for autocorrelation
+foo <- acf(dat$gfr, na.action = na.pass)
+cor(dat$gfr, dplyr::lag(dat$gfr, 1), use = "pairwise.complete")
+cor(dat$gfr, dplyr::lag(dat$gfr, 2), use = "pairwise.complete")
+cor(dat$gfr, dplyr::lag(dat$gfr, 4), use = "pairwise.complete")
+cor(dat$gfr, dplyr::lag(dat$gfr, 11), use = "pairwise.complete")
+cor(dat$gfr, dplyr::lag(dat$gfr, 12), use = "pairwise.complete")
+
+# build simple LDV model
+summary(lm(gfr ~ dyplr::lag(gfr, 1) + dplyr::lag(gfr, 2), data = dat))
 
 
 

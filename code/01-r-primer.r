@@ -29,7 +29,7 @@ source("functions.r")
 
 # - R is ready when the console offers '>'
 # - input is incomplete if R answers with '+' (you are likely to have forgotten a ')' or ']')
-1 + 2 - 3 + 
+1 + 2 - 3 + 4
   
 # - R is 'case sensitve'
 sum(1,2)
@@ -48,6 +48,7 @@ mat <- matrix(c("this", "is", "a", "matrix"), nrow = 2, byrow = TRUE)
 mat[1,2]
 mat[1,]
 mat[,1]
+
 
 # - we use # to comment in the code
 # - the RStudio editor provides auto completion (use 'TAB')
@@ -182,14 +183,16 @@ flights_sub <- arrange(flights, desc(air_time), distance)
 View(flights_sub)
 
 # select variables
-flights_sub <-  select(flights, year, month, day) 
+flights_sub <-  dplyr::select(flights, year, month, day) 
 head(flights_sub)
 
 names(flights)
-flights_sub <-  select(flights, -(dep_delay:time_hour)) 
+flights_sub <- dplyr::select(flights, -(dep_delay:time_hour)) 
 head(flights_sub)
 
-flights_sub <-select(flights, contains("time"))
+flights_sub <- dplyr::select(flights, contains("time"))
+flights_sub2 <- arrange(flights_sub, dep_time)
+
 head(flights_sub)
 
 ?select_helpers

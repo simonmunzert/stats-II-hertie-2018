@@ -3,7 +3,6 @@
 p_needed <- c("readr", # imports spreadsheet data
               "haven", # imports SPSS, Stata and SAS files
               "labelled", # helpers to work with variable labels
-              "dplyr",  # provides neat functions for data frame manipulation,
               "tidyr", # suite for tidying data
               "ggplot2", # advanced graphics suite
               "gridExtra", # more functionality for ggplot2 plot
@@ -26,7 +25,9 @@ p_needed <- c("readr", # imports spreadsheet data
               "ggthemes",
               "Zelig",
               "ISLR",
-              "janitor"
+              "janitor",
+              "dplyr",  # provides neat functions for data frame manipulation,
+              "magrittr"
 )
 packages <- rownames(installed.packages())
 p_to_install <- p_needed[!(p_needed %in% packages)]

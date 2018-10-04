@@ -18,8 +18,8 @@ browseURL("https://cran.r-project.org/web/views/Econometrics.html")
 dat <- read_dta("../data/CPDS-1960-2015.dta")
 dat <- filter(dat, emu == 1) # only EMU countries
 
-hist(dat$gov_left2)
-hist(dat$socexp_t_pmp)
+hist(dat$gov_left2) # "relative power position of social democratic and other left parties in government based on their seat share in parliament, measured in percentage of the total parliamentary seat share of all governing parties."
+hist(dat$socexp_t_pmp) # "Total public and mandatory private social expenditure as a percentage of GDP."
 
 # plot small multiples of share of left parties and social expenditures
 ggplot(data=dat, aes(x=year,y=gov_left2)) +
@@ -35,7 +35,6 @@ ggplot(data=dat, aes(x=year,y=gov_left2)) +
 
 
 # select variables
-?select
 dat <- dplyr::select(dat, year, country, iso, eu, emu, gov_left2, socexp_t_pmp, instcons, unemp)
 head(dat)
 
@@ -45,6 +44,7 @@ View(dat_wide)
 
 # make data frame long
 dat_long <- reshape(dat_wide, idvar = c("country", "iso"), varying = 3:104, direction = "long")
+View(dat_long)
 
  
 

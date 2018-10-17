@@ -36,11 +36,10 @@ plm() # plm can do (amongst others):
   # first differences: --> model = "fd"
 
 # various tests
-mtest() # Arellano-Bond test of serial correlation
-pbgtest() # Breusch-Godfrey test
-pdwtest () # Durbin-Watson test
-phtest() # Hausman test
-plmtest() # Lagrange multiplier tests
+mtest() # Arellano-Bond test of serial correlation for GMM models based on the residuals
+pbgtest() # Breusch-Godfrey test of serial correlation for (the idiosyncratic component of) errors in panel models (pooling, within, or random) based on the residuals
+pdwtest () # Durbin-Watson test of serial correlation for (the idiosyncratic component of) errors in panel models (pooling, within, or random) based on the residuals; don't use in models with autoregressive effects!
+phtest() # (Durbin-Wu-)Hausman test based on the difference of the vectors of coefficients of (usually) a FE and RE model
 purtest() # Unit root tests
 
 # extract fixed effects
@@ -138,10 +137,15 @@ summary(reg_dem) # note that the standard error is wrong. We would need to accou
 
   # would pick up variation in the outcome that occurs over time and is not attributed to other explanatory variables
   # --> capture the influence of aggregate (time-series) trends
-  # could help you deal with heteroskedasticity 
+  # --> could help you deal with heteroskedasticity across time, i.e. variance of the errors increasing or decreasing with time
 
 # fixed-effects estimator with plm
-summary(model_fe_time <- plm(socexp_t_pmp ~ gov_left2 + instcons + gov_left2 + unemp + as.factor(year), data = dat, index = c("iso", "year"), model = "within"))
+summary(model_fe_time <- plm(socexp_t_pmp ~ gov_left2 + instcons + gov_left2 + unemp, data = dat, index = c("iso", "year"), model = "within", effect = "twoways"))
+
+# effect = 
+  # individual --> cross-sectional fixed effects
+  # time --> time fixed effects
+  # twoways --> time and cross-sectional fixed effects a.k.a. twoway fixed effects
 
 # test for the need of time-fixed effects
 pFtest(model_fe_time, model_fe_plm)
@@ -166,17 +170,20 @@ phtest(model_fe_plm, model_re_plm)
 
 
 
-# ************************************************
+# *****************************************
 # Using Panel-Corrected Standard Errors (PCSEs) --
 
 
 # Beck and Katz 1995: 
-  # TSCS data, such as country panels, often tackled with models that do not account properly for complex error structures (autocorrelation, heteroskedasticity - it's a mess!)
-  # finding: frequently applied FGLS produces dramatically inaccurate coefficient standard errors
-  # PCSE estimator suggested 
+  # TSCS data, such as country panels, often tackled with models that do not account properly for complex error structures 
+  # common problem: panel heteroskedasticity, where each country has its own error variance
+  # contemporaneous correlation of errors: due to common shocks, error for one country might be correlated with errors for other countries in same year
+  # autocorrelation: errors for a given country are correlated with previous errors for that country
 
-
-# pooled OLS
+# it's a mess!
+# this has an impact on your standard errors --> observations are more similar than they should be
+# PCSE estimator suggested as one remedy for this problem - it's pretty popular in political science
+# there are others on the market, such as Driscoll and Kraay (1998)’s spatial correlation consistent (SCC) estimator
 
 
 # extract complete cases

@@ -13,9 +13,9 @@ source("functions.r")
 # you can do virtually anything with functions: assign them to variables, store them in lists, pass them as arguments to other functions, ...
 # very helpful in obeying the "don't repeat yourself" a.k.a. DRY principle
 
-f <- function(x) x^2
+f <- function(x, y) x^2 + 3*y
 f
-f(3)
+f(3, 2)
 
 # function that returns the mean of a vector
 my_mean <- function(my_vector) {
@@ -24,6 +24,9 @@ my_mean <- function(my_vector) {
 }
 my_mean(c(1, 2, 3))
 my_mean
+
+my_mean <- function(my_vector) sum(my_vector)/length(my_vector) 
+my_mean(c(1, 2, 3))
 
 # another function that finds the remainder after division ("modulo operation")
 remainder <- function(num = 10, divisor = 4) {
@@ -38,7 +41,7 @@ args(remainder)
 
 ### Exercise: Functions --------------------------
 # 1. program a function ultimateAnswer() that always returns the number 42!
-# 2. program a function normalize() that produces normalizes a numeric vector x to mean(x) = 0 and sd(x) = 1!
+# 2. program a function normalize() that normalizes a numeric vector x to mean(x) = 0 and sd(x) = 1!
 
 
 
@@ -50,7 +53,7 @@ args(remainder)
 ## the Normal distribution
 
 # rnorm() performs random draws from the distribution
-y <- rnorm(1000, mean = 0, sd = 1) 
+y <- rnorm(10000, mean = 0, sd = 1) 
 plot(y)
 plot(density(y))
 
@@ -74,7 +77,7 @@ plot(z_scores, pvalues,  type = "l", main = "cdf of the Standard Normal", xlab= 
 p <- 0.5
 n <- 100
 size <- 5
-tmp <- rbinom(n, size, p)
+tmp <- rbinom(n, size, p) # number of observations, number of trials, probability
 table(tmp)
 plot(table(tmp), xlab = "Sum of 1 in N", ylab = "Occurrence in n = 100")
 text(4.5, c(27, 24, 21), c(paste0("n = ", n), paste0("p = ", p), paste0("N = ", size)))
@@ -88,7 +91,7 @@ set.seed(1234)
 flips <- rbinom(n = 100, size = 1, prob = .4)
 table(flips)
 
-# define likelihood function
+# define log-likelihood function
 binom_loglik <- function(x, p) { # x: vector of results/observed 0s and 1s, p: probability of success 
   llik <- sum(dbinom(x, size = 1, prob = p, log = TRUE)) # calculate log likelihood with pdf for binomial distribution
   return(-llik) # return the negative log likelihood 
@@ -98,7 +101,7 @@ binom_loglik <- function(x, p) { # x: vector of results/observed 0s and 1s, p: p
 llks <- vector()
 probs <- seq(0, 1, .01)
 for (i in seq_along(probs)) {
-  llks[i] <- -sum(dbinom(flips, size = 1, prob = probs[i], log = TRUE))
+  llks[i] <- - sum(dbinom(flips, size = 1, prob = probs[i], log = TRUE))
 }
 plot(probs, -llks, type = "l")
 abline(v = probs[which.min(llks)], col = "red", lty = 2)
@@ -123,7 +126,7 @@ X <- cbind(1, wage1$educ)
 
 # define likelihood function...
 # ... but how? Here are three options:
-  # 1. minimizing the sum of squared residuals (not an acutal ML estimate)
+  # 1. minimizing the sum of squared residuals (not an actual ML estimate)
   # 2. maximizing the log-likelihood for normally distributed residuals
   # 3. maximizing the log-likelihood for normally distributed DVs
 

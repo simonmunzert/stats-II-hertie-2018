@@ -9,7 +9,7 @@ source("functions.r")
 
 ### Running a logit model -----------------------
 
-data("turnout") # example dataset from the Zeliig package
+data("turnout") # example dataset from the Zelig package
 ?turnout
 tabyl(turnout$vote)
 
@@ -22,8 +22,8 @@ summary(logit_out)
 # see also http://www.stat.cmu.edu/~cshalizi/uADA/12/lectures/ch12.pdf
 logit_loglik <- function(theta, y, X){
   b <- theta
-  logl <- sum(-y*log(1+exp(- X %*% b)) # for y = 1
-              - (1-y)*log(1+exp(X %*% b))) # for y = 0
+  logl <- sum(     y  * log(1/(1 + exp(- X %*% b))) + # for y = 1
+              (1 - y) * log(1/(1 + exp(X %*% b)))) # for y = 0
   return(-logl)
 }	
 
@@ -51,61 +51,12 @@ summary (M2)
 
 
 
-
-### Goodness of fit ----------------------------
-
-# Log-Likelihood
-LogLik <- logLik(logit_out)
-LogLik
-
-# McFadden's Pseudo-R^2                                 
-logit_out_empty <- glm(vote ~ 1, family = binomial, data = turnout) # estimate empty model 
-Pseudo_R2 <- 1 - (as.numeric(logLik(logit_out)))/(as.numeric(logLik(logit_out_empty)))
-Pseudo_R2
-
-# Likelihood ratio Chi-squared
-chi2_test_stat <- 2*(as.numeric(logLik(logit_out)) - as.numeric(logLik(logit_out_empty)))
-lr_test <- 1 - pchisq(chi2_test_stat, 1)
-chi2_test_stat
-lr_test
-                                     
-# BIC
-# see J. Scott Long and Jeremy Freese 2000. Stata Technical Bulletin STB-56:34-40
-D.M.mod <- as.numeric(-2*LogLik)
-N <- length(logit_out$y)
-k <- length(logit_out$coef)
-df.mod <- N - k
-BIC.mod <- D.M.mod - df.mod*log(N)
-BIC.mod
-
-
-### Precision and recall -----------------------
-
-turnout$vote_pred_link <- predict(logit_out, type = "link")
-turnout$vote_pred_prob <- predict(logit_out, type = "response")
-turnout$vote_pred <- ifelse(turnout$vote_pred_prob > .5, 1, 0)
-
-plot(turnout$vote_pred_link, turnout$vote_pred_prob) # links versus response
-
-tab <- table(turnout$vote, turnout$vote_pred)
-colnames(tab) <- c("pred vote NO", "pred vote YES")
-rownames(tab) <- c("rep vote NO", "rep vote YES")
-tab
-
-# precision:
-sum(turnout$vote_pred == 1 & turnout$vote == 1) / sum(turnout$vote_pred == 1)
-
-# recall:
-sum(turnout$vote_pred == 1 & turnout$vote == 1) / sum(turnout$vote == 1)
-
-
-
 ### From log odds to odds ratios and probabilities ---
 
 summary(logit_out)
-cbind(log_odds <- round(coef(logit_out), 4),
-      odds_ratios <- round(exp(coef(logit_out)), 4),
-      probabilities <- round(1/(1+exp(-coef(logit_out))), 4))
+cbind(log_odds <- round(coef(logit_out), 2),
+      odds_ratios <- round(exp(coef(logit_out)), 2),
+      probabilities <- round(1/(1+exp(-coef(logit_out))), 2))
 
 # look at an empty model again to understand how the log odds and the probability are related
 logit_out_empty <- glm(vote ~ 1,
@@ -141,7 +92,6 @@ marginal_effects(logit_out) # unit-specific marginal effects with respect to all
 
 
 ### Visualize probabilities - graphical solution ---
-
 df <- data.frame(age = min(turnout$age):max(turnout$age), educate = 10, income = 4) 
 model_preds <- predict(logit_out, newdata = df, type = 'response', se.fit = TRUE)
 df$prediction <- model_preds$fit 
@@ -159,96 +109,178 @@ cplot(logit_out, "age", what = "effect")
 
 
 
+### Goodness of fit ----------------------------
+
+# Log-Likelihood
+LogLik <- logLik(logit_out)
+LogLik
+
+# McFadden's Pseudo-R^2                                 
+logit_out_empty <- glm(vote ~ 1, family = binomial, data = turnout) # estimate empty model 
+Pseudo_R2 <- 1 - (as.numeric(logLik(logit_out)))/(as.numeric(logLik(logit_out_empty)))
+Pseudo_R2
+
+# Likelihood ratio Chi-squared
+chi2_test_stat <- 2*(as.numeric(logLik(logit_out)) - as.numeric(logLik(logit_out_empty)))
+lr_test <- 1 - pchisq(chi2_test_stat, 1)
+chi2_test_stat
+lr_test
+
+# AIC
+k <- length(logit_out$coef)
+AIC <- 2 * k - 2 * logLik(logit_out)
+AIC
+
+# BIC
+N <- length(logit_out$y)
+BIC <- log(N) * k - 2 * logLik(logit_out)
+BIC
+
+library(stats4)
+AIC(logit_out)
+BIC(logit_out)
+
+
+### Precision and recall -----------------------
+
+turnout$vote_pred_link <- predict(logit_out, type = "link")
+turnout$vote_pred_prob <- predict(logit_out, type = "response")
+turnout$vote_pred <- ifelse(turnout$vote_pred_prob > .5, 1, 0)
+
+plot(turnout$vote_pred_link, turnout$vote_pred_prob) # links versus response
+
+tab <- table(turnout$vote, turnout$vote_pred)
+colnames(tab) <- c("pred vote NO", "pred vote YES")
+rownames(tab) <- c("rep vote NO", "rep vote YES")
+tab
+
+# precision:
+sum(turnout$vote_pred == 1 & turnout$vote == 1) / sum(turnout$vote_pred == 1)
+
+# recall:
+sum(turnout$vote_pred == 1 & turnout$vote == 1) / sum(turnout$vote == 1)
+
+
+
 
 ## Interactions in logit models -------------
 
-logit_out_int <- glm(vote ~ educate + income*age,
-                 family = binomial, data = turnout)
+turnout$edu_cat <- cut(turnout$educate, breaks=c(0, 10, 13, Inf), labels=c("low", "mid", "high"))
+table(turnout$edu_cat)
+
+logit_out_int <- glm(vote ~ edu_cat + income + edu_cat*age,
+                     family = binomial, data = turnout)
 summary(logit_out_int)
 
-hist(turnout$income)
 
-df <- data.frame(educate = 12, age = rep(min(turnout$age):max(turnout$age), 10), income = rep(1:10, each = diff(range(turnout$age))+1))
-model_preds <- predict(logit_out, newdata = df, type = 'response', se.fit = TRUE)
+df <- expand.grid(edu_cat = c("low", "mid", "high"),
+                  age = min(turnout$age):max(turnout$age),
+                  income = 5,
+                  stringsAsFactors = F)
+
+model_preds <- predict(logit_out_int, newdata = df, type = 'response', se.fit = TRUE)
 df$prediction <- model_preds$fit 
 
+cols = c("black", "red", "blue")
 plot(df$age, df$prediction, cex = 0)
-income_values <- unique(df$income)
-for(i in income_values) { 
- with(filter(df, income == income_values[i]), lines(age, prediction))
-  }
-#plot(df$income, df$prediction)
+edu_cat_values <- unique(df$edu_cat)
+for(i in seq_along(edu_cat_values)) { 
+  with(dplyr::filter(df, edu_cat == edu_cat_values[i]), lines(age, prediction, col = cols[i]))
+}
+
 
 # also see 
 browseURL("https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html") 
 # --> section "Interactions in Logit"
 
 
-## Credit Default data -------------
 
-?Default
-dat <- Default
-dat$def <- ifelse(as.numeric(dat$default) == 2, 1, 0)
-table(dat$def)
 
+
+## Simulate data -------------
+
+set.seed(123)
+n = 500
+x <- rnorm(n)
+z <- 1 + 2 * x + rnorm(n, 0, .2) # linear combination with noise
+prob = 1/(1+exp(-z))  # pass through inv-logit function
+plot(density(prob))
+y = rbinom(n,1,prob)  # bernoulli response variable
+table(y)
+
+dat <- data.frame(x = scales::rescale(x, to = c(0, 10000))
+, y = y, prob = prob, stringsAsFactors = F)
+
+# plot relationship
 pdf(file="../output/logit-viz-1.pdf", height=4, width=6, family="URWTimes")
 par(oma=c(0,0,0,0))
 par(mar=c(4,4,1.2,.5))
-plot(dat$balance, dat$def, col = "blue", xlab = "Balance", ylab = "Credit default (No/Yes)")
+plot(dat$x, dat$y, col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
 abline(h=0:1, lty = 3)
 abline(h=.5, lty = 3)
 dev.off()
 
+
+# plot relationship
+pdf(file="../output/logit-viz-1-jitter.pdf", height=4, width=6, family="URWTimes")
+par(oma=c(0,0,0,0))
+par(mar=c(4,4,1.2,.5))
+plot(dat$x, jitter(dat$y, .25), col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
+abline(h=0:1, lty = 3)
+abline(h=.5, lty = 3)
+dev.off()
+
+
 pdf(file="../output/logit-viz-2.pdf", height=4, width=6, family="URWTimes")
 par(oma=c(0,0,0,0))
 par(mar=c(4,4,1.2,.5))
-plot(dat$balance, dat$def, col = "blue", xlab = "Balance", ylab = "Credit default (No/Yes)")
+plot(dat$x, dat$y, col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
 abline(h=0:1, lty = 3)
 abline(h=.5, lty = 3)
-abline(lm(def~balance, data = dat), col = "red", lwd = 2)
+abline(lm(y~x, data = dat), col = "red", lwd = 2)
 dev.off()
 
 pdf(file="../output/logit-viz-3.pdf", height=4, width=6, family="URWTimes")
 par(oma=c(0,0,0,0))
 par(mar=c(4,4,1.2,.5))
-plot(dat$balance, dat$def, col = "blue", xlab = "Balance", ylab = "Credit default (No/Yes)")
+plot(dat$x, dat$y, col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
 abline(h=0:1, lty = 3)
 abline(h=.5, lty = 3)
 # logit fit
-fit = glm(def ~ balance, data=dat, family = binomial)
-newdat <- data.frame(balance = seq(min(dat$balance), max(dat$balance),len=100))
+fit = glm(y ~ x, data=dat, family = binomial)
+newdat <- data.frame(x = seq(min(dat$x), max(dat$x),len=100))
 newdat$vs = predict(fit, newdata=newdat, type="response")
-lines(vs ~ balance, newdat, col="red", lwd=2)
+lines(vs ~ x, newdat, col="red", lwd=2)
 dev.off()
 
 pdf(file="../output/logit-viz-4.pdf", height=4, width=6, family="URWTimes")
 par(oma=c(0,0,0,0))
 par(mar=c(4,4,1.2,.5))
-plot(dat$balance, dat$def, col = "blue", xlab = "Balance", ylab = "Credit default (No/Yes)")
+plot(dat$x, dat$y, col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
 abline(h=0:1, lty = 3)
 abline(h=.5, lty = 3)
 # logit fit
-fit = glm(def ~ balance, data=dat, family = binomial)
-newdat <- data.frame(balance = seq(min(dat$balance), max(dat$balance),len=100))
+fit = glm(y ~ x, data=dat, family = binomial)
+newdat <- data.frame(x = seq(min(dat$x), max(dat$x),len=100))
 newdat$vs = predict(fit, newdata=newdat, type="response")
-lines(vs ~ balance, newdat, col="red", lwd=2)
-abline(v=c(500, 1000), col = "black", lwd = 3)
-arrows(500, .3, 1000, .3, lwd = 3)
+lines(vs ~ x, newdat, col="red", lwd=2)
+abline(v=c(2000, 4000), col = "black", lwd = 3)
+arrows(2000, .3, 4000, .3, lwd = 3)
 dev.off()
 
 pdf(file="../output/logit-viz-5.pdf", height=4, width=6, family="URWTimes")
 par(oma=c(0,0,0,0))
 par(mar=c(4,4,1.2,.5))
-plot(dat$balance, dat$def, col = "blue", xlab = "Balance", ylab = "Credit default (No/Yes)")
+plot(dat$x, dat$y, col = "blue", xlab = "Income", ylab = "Voted (No/Yes)")
 abline(h=0:1, lty = 3)
 abline(h=.5, lty = 3)
 # logit fit
-fit = glm(def ~ balance, data=dat, family = binomial)
-newdat <- data.frame(balance = seq(min(dat$balance), max(dat$balance),len=100))
+fit = glm(y ~ x, data=dat, family = binomial)
+newdat <- data.frame(x = seq(min(dat$x), max(dat$x),len=100))
 newdat$vs = predict(fit, newdata=newdat, type="response")
-lines(vs ~ balance, newdat, col="red", lwd=2)
-abline(v=c(1500, 2000), col = "black", lwd = 3)
-arrows(1500, .3, 2000, .3, lwd = 3)
+lines(vs ~ x, newdat, col="red", lwd=2)
+abline(v=c(6000, 8000), col = "black", lwd = 3)
+arrows(6000, .3, 8000, .3, lwd = 3)
 dev.off()
 
 

@@ -39,14 +39,15 @@ workmom77 %>% group_by(age > 60) %>% summarize(warm = mean(warm == 3 | warm == 4
 # years of education of respondent;
 # prestige of respondent's occupation (% considering prestigious)
 
-# Use MASS::polr to do ordered logit (for probit, simply change method to "probit")
-warm77_olog <- polr(warmf ~ male + white + age + ed + prst, data = workmom77, method = "probit", na.action = na.omit)
-summary(warm77_olog)
-stargazer(warm77_olog, ord.intercepts = TRUE, type="text")
+# Use MASS::polr to do ordered probit (for logit, simply change method to "logit")
+warm77_oprob <- polr(warmf ~ male + white + age + ed + prst, data = workmom77, method = "probit", na.action = na.omit)
+summary(warm77_oprob)
+stargazer(warm77_oprob, ord.intercepts = TRUE, type="text")
+
 
 # predicted values
-predict_class <- predict(warm77_olog, type = "class")
-predict_probs <- predict(warm77_olog, type = "probs")
+predict_class <- predict(warm77_oprob, type = "class")
+predict_probs <- predict(warm77_oprob, type = "probs")
 
 # predicted vs. true
 table(predict_class, workmom77$warmf)
@@ -54,30 +55,33 @@ table(predict_class, workmom77$warmf)
 # Some questions: 
 # 1. An increase on which variables makes "Agree" and "Strongly agree" answers more likely?
 # 2. Which probabilities for each category would we predict for a white, 25-year old with 15 years of education and job prestige of .8?
-predict(warm77_olog, newdata = data.frame(male = 1, white = 1, age = 25, ed = 15, prst = .8), type = "probs") # single case
+predict(warm77_oprob, newdata = data.frame(male = 1, white = 1, age = 25, ed = 15, prst = .8), type = "probs") # single case
+
+# predicted value by hand
+-.40 -.24 + 25*-0.011 + 15*0.045 + .8 * 0.002
 
 # by hand for category 1 ("Strongly Disagree")
-pnorm(warm77_olog$zeta[1], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
+warm77_oprob$zeta
+pnorm(warm77_oprob$zeta[1], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
 
 # by hand for category 2 ("Disagree")
-pnorm(warm77_olog$zeta[2], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1) - 
-  pnorm(warm77_olog$zeta[1], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
+pnorm(warm77_oprob$zeta[2], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1) - 
+  pnorm(warm77_oprob$zeta[1], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
 
 # by hand for category 3 ("Agree")
-pnorm(warm77_olog$zeta[3], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1) - 
-  pnorm(warm77_olog$zeta[2], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
+pnorm(warm77_oprob$zeta[3], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1) - 
+  pnorm(warm77_oprob$zeta[2], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
 
 # by hand for category 4 ("Strongly Agree")
-1 - pnorm(warm77_olog$zeta[3], mean = sum(warm77_olog$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
+1 - pnorm(warm77_oprob$zeta[3], mean = sum(warm77_oprob$coefficients * c(1, 1, 25, 15, .8)), sd = 1)
 
 
 ### Visualize predicted probabilities from  ordinal logit model -----------------------
-
 library(ZeligChoice)
 library(magrittr)
 
 # run model
-z_out <- zelig(warmf ~ male + white + age + ed + prst, data = workmom77, model = "ologit")
+z_out <- zelig(warmf ~ male + white + age + ed + prst, data = workmom77, model = "oprobit")
 summary(z_out)
 
 # simulate probabilities
